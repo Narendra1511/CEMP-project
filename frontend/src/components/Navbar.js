@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -16,21 +17,15 @@ function Navbar() {
     <nav
       style={{
         width: "100%",
-        position: "sticky",
-        top: 0,
-        zIndex: 1000,
-        background: "rgba(255, 255, 255, 0.15)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        borderBottom: "1px solid rgba(255,255,255,0.2)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        background: "#0f172a",
+        boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+        padding: "14px 20px",
       }}
     >
       <div
         style={{
           maxWidth: "1200px",
           margin: "0 auto",
-          padding: "14px 20px",
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -38,53 +33,39 @@ function Navbar() {
           gap: "10px",
         }}
       >
+        {/* Title */}
         <Link
           to="/"
           style={{
             textDecoration: "none",
-            color: "#131313",
+            color: "white",
             fontWeight: "bold",
-            fontSize: "1.3rem",
-            letterSpacing: "0.5px",
+            fontSize: "1.2rem",
           }}
         >
-          CEMP
+          Cloud Event Management Platform
         </Link>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "12px",
-            flexWrap: "wrap",
-          }}
-        >
+        {/* Menu */}
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
           <NavItem to="/">Home</NavItem>
           <NavItem to="/events">Events</NavItem>
 
           {!user && <NavItem to="/login">Login</NavItem>}
           {!user && <NavItem to="/register">Signup</NavItem>}
 
-          {user && user.role === "user" && (
+          {user?.role === "user" && (
             <NavItem to="/my-registrations">My Registrations</NavItem>
           )}
 
-          {user && user.role === "admin" && (
+          {user?.role === "admin" && (
             <NavItem to="/create-event">Create Event</NavItem>
           )}
 
           {user && (
             <button
               onClick={handleLogout}
-              style={{
-                padding: "10px 16px",
-                border: "none",
-                borderRadius: "10px",
-                backgroundColor: "#ef4444",
-                color: "white",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
+              style={logoutStyle}
             >
               Logout
             </button>
@@ -95,23 +76,42 @@ function Navbar() {
   );
 }
 
+/* 🔥 Hover-enabled NavItem */
 function NavItem({ to, children }) {
+  const [hover, setHover] = useState(false);
+
   return (
     <Link
       to={to}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
       style={{
         textDecoration: "none",
-        color: "white",
+        color: hover ? "#0f172a" : "white",
         fontWeight: "600",
         padding: "10px 14px",
         borderRadius: "10px",
-        transition: "0.3s ease",
-        background: "rgba(28, 26, 26, 0.98)",
+        background: hover ? "#ffd166" : "#1e293b",
+        transform: hover ? "scale(1.08)" : "scale(1)",
+        transition: "all 0.25s ease",
+        cursor: "pointer",
       }}
     >
       {children}
     </Link>
   );
 }
+
+/* Logout button style */
+const logoutStyle = {
+  padding: "10px 16px",
+  border: "none",
+  borderRadius: "10px",
+  backgroundColor: "#ef4444",
+  color: "white",
+  fontWeight: "bold",
+  cursor: "pointer",
+  transition: "0.3s",
+};
 
 export default Navbar;
