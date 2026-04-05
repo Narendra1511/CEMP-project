@@ -57,7 +57,13 @@ const getUserRegistrations = async (req, res) => {
     const { user_id } = req.params;
 
     const registrations = await pool.query(
-      `SELECT registrations.id, events.title, events.description, events.event_date, events.location
+      `SELECT 
+        registrations.id,
+        registrations.event_id,
+        events.title,
+        events.description,
+        events.event_date,
+        events.location
        FROM registrations
        JOIN events ON registrations.event_id = events.id
        WHERE registrations.user_id = $1
