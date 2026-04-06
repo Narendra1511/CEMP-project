@@ -106,7 +106,9 @@ function HomePage() {
           <div style={cardStyle}>
             <div style={iconStyle}>☁️</div>
             <h3>Cloud Ready</h3>
-            <p>Built as a cloud-based platform with backend APIs, database integration, and deployment support.</p>
+            <p>Cloud Ready
+
+Developed using AWS EC2 (backend), AWS S3 (storage & hosting), CloudWatch (monitoring), GitHub Actions (CI/CD), and PostgreSQL (Supabase) for data management.</p>
           </div>
         </div>
       </div>
