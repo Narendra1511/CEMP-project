@@ -1,15 +1,12 @@
-name: CEMP CI Pipeline
+name: CEMP CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -36,3 +33,21 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npx react-scripts build
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/CEMP-project
+            git pull origin main
+            cd frontend
+            npm install
+            chmod +x node_modules/.bin/react-scripts
+            npx react-scripts build
+            cd ../backend
+            npm install
+            pm2 restart cemp-backend || pm2 start app.js --name cemp-backend
+            pm2 save
