@@ -1,26 +1,31 @@
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
+const path = require("path");
+require("dotenv").config();
 
-dotenv.config();
-
-const { connectDB } = require("./database/db");
+const connectDB = require("./database/db");
 
 const app = express();
 
+// Connect Database
 connectDB();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-  res.send("CEMP backend is running");
-});
-
+// API Routes
 app.use("/api/auth", require("./api/authApi"));
 app.use("/api/events", require("./api/eventApi"));
 app.use("/api/registrations", require("./api/registrationApi"));
-app.use("/api/upload", require("./api/uploadApi"));
+
+// Serve React frontend build
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+// React routes
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build/index.html"));
+});
 
 const PORT = process.env.PORT || 5000;
 
