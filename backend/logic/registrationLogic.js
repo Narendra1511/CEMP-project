@@ -1,4 +1,4 @@
-const pool = require("../database/db");
+const { pool } = require("../database/db");
 
 const registerForEvent = async (req, res) => {
   try {

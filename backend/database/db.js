@@ -9,13 +9,11 @@ const pool = new Pool({
 
 const connectDB = async () => {
   try {
-    const client = await pool.connect();
+    await pool.connect();
     console.log("PostgreSQL connected");
-    client.release();
   } catch (error) {
-    console.log("Database connection error:", error);
+    console.error("Database connection error:", error);
   }
 };
 
-module.exports = pool;
-module.exports.connectDB = connectDB;
+module.exports = { pool, connectDB };
