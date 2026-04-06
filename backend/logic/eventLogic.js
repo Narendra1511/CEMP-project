@@ -4,7 +4,7 @@ const { validateEvent } = require("../../utils");
 // CREATE EVENT
 const createEvent = async (req, res) => {
   try {
-    const { title, description, event_date, location, capacity } = req.body;
+    const { title, description, event_date, location, capacity, image_url } = req.body;
     const created_by = req.user.id;
 
     if (!validateEvent({ title, description, date: event_date })) {
@@ -12,10 +12,10 @@ const createEvent = async (req, res) => {
     }
 
     const newEvent = await pool.query(
-      `INSERT INTO events (title, description, event_date, location, capacity, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO events (title, description, event_date, location, capacity, image_url, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [title, description, event_date, location, capacity, created_by]
+      [title, description, event_date, location, capacity, image_url, created_by]
     );
 
     res.status(201).json({
@@ -50,7 +50,7 @@ const getAllEvents = async (req, res) => {
 const updateEvent = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, event_date, location, capacity } = req.body;
+    const { title, description, event_date, location, capacity, image_url } = req.body;
 
     if (!title || !description || !event_date || !location || !capacity) {
       return res.status(400).json({ message: "All fields required" });
@@ -62,10 +62,11 @@ const updateEvent = async (req, res) => {
            description = $2,
            event_date = $3,
            location = $4,
-           capacity = $5
-       WHERE id = $6
+           capacity = $5,
+           image_url = $6
+       WHERE id = $7
        RETURNING *`,
-      [title, description, event_date, location, capacity, id]
+      [title, description, event_date, location, capacity, image_url, id]
     );
 
     if (updatedEvent.rows.length === 0) {

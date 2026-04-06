@@ -20,6 +20,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", require("./api/authApi"));
 app.use("/api/events", require("./api/eventApi"));
 app.use("/api/registrations", require("./api/registrationApi"));
+app.use("/api/upload", require("./api/uploadApi"));
 
 const PORT = process.env.PORT || 5000;
 

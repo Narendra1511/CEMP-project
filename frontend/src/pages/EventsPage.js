@@ -10,6 +10,7 @@ function EventsPage() {
     event_date: "",
     location: "",
     capacity: "",
+    image_url: "",
   });
 
   const storedUser = localStorage.getItem("user");
@@ -76,6 +77,7 @@ function EventsPage() {
       event_date: event.event_date ? String(event.event_date).split("T")[0] : "",
       location: event.location,
       capacity: event.capacity,
+      image_url: event.image_url || "",
     });
   };
 
@@ -115,6 +117,7 @@ function EventsPage() {
       event_date: "",
       location: "",
       capacity: "",
+      image_url: "",
     });
   };
 
@@ -155,7 +158,7 @@ function EventsPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
               gap: "25px",
             }}
           >
@@ -216,24 +219,41 @@ function EventsPage() {
                       style={inputStyle}
                     />
 
+                    <input
+                      type="text"
+                      name="image_url"
+                      value={editFormData.image_url}
+                      onChange={handleEditChange}
+                      placeholder="Image URL"
+                      style={inputStyle}
+                    />
+
                     <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                      <button
-                        style={saveButtonStyle}
-                        onClick={() => handleUpdateSave(event.id)}
-                      >
+                      <button style={saveButtonStyle} onClick={() => handleUpdateSave(event.id)}>
                         Save
                       </button>
 
-                      <button
-                        style={cancelButtonStyle}
-                        onClick={handleCancelEdit}
-                      >
+                      <button style={cancelButtonStyle} onClick={handleCancelEdit}>
                         Cancel
                       </button>
                     </div>
                   </>
                 ) : (
                   <>
+                    {event.image_url && (
+                      <img
+                        src={event.image_url}
+                        alt={event.title}
+                        style={{
+                          width: "100%",
+                          height: "200px",
+                          objectFit: "cover",
+                          borderRadius: "15px",
+                          marginBottom: "15px",
+                        }}
+                      />
+                    )}
+
                     <h3 style={{ marginBottom: "10px" }}>{event.title}</h3>
                     <p style={{ marginBottom: "10px" }}>
                       <strong>Description:</strong> {event.description}
@@ -256,17 +276,11 @@ function EventsPage() {
 
                     {user?.role === "admin" ? (
                       <div style={{ display: "flex", gap: "10px" }}>
-                        <button
-                          style={updateButtonStyle}
-                          onClick={() => handleEditClick(event)}
-                        >
+                        <button style={updateButtonStyle} onClick={() => handleEditClick(event)}>
                           Update
                         </button>
 
-                        <button
-                          style={deleteButtonStyle}
-                          onClick={() => handleDelete(event.id)}
-                        >
+                        <button style={deleteButtonStyle} onClick={() => handleDelete(event.id)}>
                           Delete
                         </button>
                       </div>

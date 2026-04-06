@@ -8,6 +8,7 @@ function CreateEventPage() {
     event_date: "",
     location: "",
     capacity: "",
+    image_url: "",
   });
 
   const handleChange = (event) => {
@@ -48,6 +49,7 @@ function CreateEventPage() {
         event_date: "",
         location: "",
         capacity: "",
+        image_url: "",
       });
     } catch (error) {
       alert(error.response?.data?.message || "Event creation failed");
@@ -135,6 +137,15 @@ function CreateEventPage() {
             onChange={handleChange}
             style={inputStyle}
             required
+          />
+
+          <input
+            type="text"
+            name="image_url"
+            placeholder="Paste S3 Image URL"
+            value={formData.image_url}
+            onChange={handleChange}
+            style={inputStyle}
           />
 
           <button type="submit" style={buttonStyle}>
