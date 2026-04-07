@@ -8,8 +8,9 @@ function CreateEventPage() {
     event_date: "",
     location: "",
     capacity: "",
-    image_url: "",
   });
+
+  const [image, setImage] = useState(null);
 
   const handleChange = (event) => {
     setFormData({
@@ -35,9 +36,21 @@ function CreateEventPage() {
         return;
       }
 
-      const response = await api.post("/events", formData, {
+      const submitData = new FormData();
+      submitData.append("title", formData.title);
+      submitData.append("description", formData.description);
+      submitData.append("event_date", formData.event_date);
+      submitData.append("location", formData.location);
+      submitData.append("capacity", formData.capacity);
+
+      if (image) {
+        submitData.append("image", image);
+      }
+
+      const response = await api.post("/events", submitData, {
         headers: {
           Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -49,8 +62,8 @@ function CreateEventPage() {
         event_date: "",
         location: "",
         capacity: "",
-        image_url: "",
       });
+      setImage(null);
     } catch (error) {
       alert(error.response?.data?.message || "Event creation failed");
       console.error("Create event error:", error);
@@ -140,11 +153,9 @@ function CreateEventPage() {
           />
 
           <input
-            type="text"
-            name="image_url"
-            placeholder="Paste S3 Image URL"
-            value={formData.image_url}
-            onChange={handleChange}
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files[0])}
             style={inputStyle}
           />
 

@@ -1,14 +1,33 @@
+const { PutObjectCommand } = require("@aws-sdk/client-s3");
 const { pool } = require("../database/db");
+const s3 = require("../config/s3");
 const { validateEvent } = require("../../utils");
 
 // CREATE EVENT
 const createEvent = async (req, res) => {
   try {
-    const { title, description, event_date, location, capacity, image_url } = req.body;
+    const { title, description, event_date, location, capacity } = req.body;
     const created_by = req.user.id;
 
     if (!validateEvent({ title, description, date: event_date })) {
       return res.status(400).json({ message: "Invalid event data" });
+    }
+
+    let image_url = null;
+
+    if (req.file) {
+      const fileName = `${Date.now()}-${req.file.originalname}`;
+
+      const command = new PutObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: fileName,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      });
+
+      await s3.send(command);
+
+      image_url = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
     }
 
     const newEvent = await pool.query(
@@ -23,6 +42,7 @@ const createEvent = async (req, res) => {
       event: newEvent.rows[0],
     });
   } catch (error) {
+    console.error("Create event error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -66,7 +86,7 @@ const updateEvent = async (req, res) => {
            image_url = $6
        WHERE id = $7
        RETURNING *`,
-      [title, description, event_date, location, capacity, image_url, id]
+      [title, description, event_date, location, capacity, image_url || null, id]
     );
 
     if (updatedEvent.rows.length === 0) {
