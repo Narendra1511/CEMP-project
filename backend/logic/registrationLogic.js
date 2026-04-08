@@ -1,5 +1,6 @@
 const { pool } = require("../database/db");
 const logAuditEvent = require("../utils/auditLogger");
+const sendNotification = require("../utils/notify");
 
 const registerForEvent = async (req, res) => {
   try {
@@ -29,14 +30,17 @@ const registerForEvent = async (req, res) => {
       action: "REGISTER_EVENT",
       user_id,
       event_id,
-      message: `User registered for event successfully`,
+      message: `User ${user_id} registered for event ${event_id}`,
     });
+
+    await sendNotification(`User ${user_id} registered for event ${event_id}`);
 
     res.status(201).json({
       message: "Registration successful",
       registration: newRegistration.rows[0],
     });
   } catch (error) {
+    console.error("Register event error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -44,6 +48,10 @@ const registerForEvent = async (req, res) => {
 const cancelRegistration = async (req, res) => {
   try {
     const { user_id, event_id } = req.body;
+
+    if (!user_id || !event_id) {
+      return res.status(400).json({ message: "User ID and Event ID are required" });
+    }
 
     const deletedRegistration = await pool.query(
       "DELETE FROM registrations WHERE user_id = $1 AND event_id = $2 RETURNING *",
@@ -58,11 +66,14 @@ const cancelRegistration = async (req, res) => {
       action: "CANCEL_REGISTRATION",
       user_id,
       event_id,
-      message: `User cancelled event registration`,
+      message: `User ${user_id} cancelled registration for event ${event_id}`,
     });
+
+    await sendNotification(`User ${user_id} cancelled registration for event ${event_id}`);
 
     res.status(200).json({ message: "Registration cancelled successfully" });
   } catch (error) {
+    console.error("Cancel registration error:", error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -78,7 +89,8 @@ const getUserRegistrations = async (req, res) => {
         events.title,
         events.description,
         events.event_date,
-        events.location
+        events.location,
+        events.image_url
        FROM registrations
        JOIN events ON registrations.event_id = events.id
        WHERE registrations.user_id = $1
@@ -88,6 +100,7 @@ const getUserRegistrations = async (req, res) => {
 
     res.status(200).json(registrations.rows);
   } catch (error) {
+    console.error("Get registrations error:", error);
     res.status(500).json({ message: error.message });
   }
 };
