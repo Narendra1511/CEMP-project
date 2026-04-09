@@ -1,6 +1,4 @@
 const { pool } = require("../database/db");
-const logAuditEvent = require("../utils/auditLogger");
-const sendNotification = require("../utils/notify");
 
 const registerForEvent = async (req, res) => {
   try {
@@ -25,15 +23,6 @@ const registerForEvent = async (req, res) => {
        RETURNING *`,
       [user_id, event_id]
     );
-
-    await logAuditEvent({
-      action: "REGISTER_EVENT",
-      user_id,
-      event_id,
-      message: `User ${user_id} registered for event ${event_id}`,
-    });
-
-    await sendNotification(`User ${user_id} registered for event ${event_id}`);
 
     res.status(201).json({
       message: "Registration successful",
@@ -61,15 +50,6 @@ const cancelRegistration = async (req, res) => {
     if (deletedRegistration.rows.length === 0) {
       return res.status(404).json({ message: "Registration not found" });
     }
-
-    await logAuditEvent({
-      action: "CANCEL_REGISTRATION",
-      user_id,
-      event_id,
-      message: `User ${user_id} cancelled registration for event ${event_id}`,
-    });
-
-    await sendNotification(`User ${user_id} cancelled registration for event ${event_id}`);
 
     res.status(200).json({ message: "Registration cancelled successfully" });
   } catch (error) {
