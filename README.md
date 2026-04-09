@@ -1,127 +1,156 @@
-# Cloud Event Management Platform (CEMP)
+# 🌐 Event Management Platform (CEMP)
 
-## Overview
-This project is a cloud-based event management system.
-
-## Features
-- Admin can create, update, delete events
-- Users can register and view events
-
-## Technologies
-- React (Frontend)
-- Node.js (Backend)
-- PostgreSQL (AWS RDS)
-
-## Structure
-- frontend → UI
-- backend → API
-- utils → helper functions
-# Cloud Event Management Platform (CEMP)
-
-A full-stack web application to manage events, user registrations, and cloud-based event workflows.
+A cloud-based event management system where users can create, manage, and register for events. The system is built using modern web technologies and deployed using multiple AWS cloud services.
 
 ---
 
 ## 🚀 Features
 
-- User Signup & Login (JWT Authentication)
-- Role-based Access (Admin / User)
-- Create Events (Admin only)
-- View Events (All users)
-- Register for Events
-- View My Registrations
-- Responsive and colorful UI
+* User authentication (Login / Register)
+* Create and manage events
+* Upload event images using AWS S3
+* Register and cancel event participation
+* Email notifications using AWS SNS
+* Audit logging using AWS DynamoDB
+* Monitoring and logging using AWS CloudWatch
 
 ---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-- React.js
-- Axios
-- React Router
+Frontend:
 
-### Backend
-- Node.js
-- Express.js
-- PostgreSQL (Supabase)
+* React.js
 
-### Authentication
-- JWT (JSON Web Token)
-- bcrypt for password hashing
+Backend:
 
----
+* Node.js
+* Express.js
 
-## 📁 Project Structure
+Database:
 
+* PostgreSQL (Supabase)
 
 ---
 
-## ⚙️ Setup Instructions
+## ☁️ AWS Services Used
 
-### 1. Clone the repository
-
-
----
-
-### 2. Setup Backend
-
-
-Create `.env` file:
-
-
-Run backend:
-
+* Amazon EC2 → Hosts backend server
+* Amazon S3 → Stores event images
+* Amazon DynamoDB → Stores audit logs
+* Amazon SNS → Sends notifications
+* Amazon CloudWatch → Monitors logs and system activity
 
 ---
 
-### 3. Setup Frontend
+## 🧱 System Architecture
 
-
----
-
-## 🌐 API Endpoints
-
-### Auth
-- POST `/api/auth/register`
-- POST `/api/auth/login`
-
-### Events
-- GET `/api/events`
-- POST `/api/events` (admin only)
-
-### Registrations
-- POST `/api/registrations`
-- GET `/api/registrations/user/:id`
+User → React Frontend → Node.js Backend (EC2) → PostgreSQL (Supabase) → S3 (Image Storage) → DynamoDB (Audit Logs) → SNS (Notifications) → CloudWatch (Monitoring)
 
 ---
 
-## 🔐 Roles
+## ⚙️ Local Setup
 
-- Admin → Create events
-- User → Register for events
+Clone repository:
+git clone <your-repo-url>
+
+Backend setup:
+cd backend
+npm install
+npm start
+
+Frontend setup:
+cd frontend
+npm install
+npm start
 
 ---
 
-## 📸 Screens
+## 🔐 Environment Variables
 
-- Home Page (Colorful UI)
-- Login Page
-- Signup Page
-- Events Page
-- My Registrations Page
+Example .env file:
+
+PORT=5000
+DATABASE_URL=your_database_url
+JWT_SECRET=your_secret_key
+AWS_REGION=us-east-1
+AWS_BUCKET_NAME=your_bucket_name
+SNS_TOPIC_ARN=your_sns_topic_arn
 
 ---
 
-## ☁️ Future Improvements
+## ☁️ AWS Deployment (EC2 Steps)
 
-- AWS Deployment
-- File upload with S3
-- Notifications system
-- Dashboard analytics
+Connect to EC2:
+ssh -i key.pem ubuntu@your-ec2-ip
+
+Clone project:
+git clone <repo-url>
+cd CEMP-project/backend
+
+Install dependencies:
+npm install
+
+Run backend using PM2:
+pm2 start app.js --name cemp-backend
+pm2 save
+pm2 startup
+
+Update code:
+git pull
+pm2 restart cemp-backend
+
+---
+
+## 🔄 CI/CD Notes
+
+* GitHub is used for version control
+* Code is pushed to GitHub repository
+* EC2 pulls latest changes using git pull
+* PM2 is used to restart backend automatically
+* This ensures continuous deployment workflow
+
+---
+
+## 📊 Monitoring
+
+Application logs are sent to AWS CloudWatch.
+
+Path to check logs:
+CloudWatch → Log groups → cemp-logs → backend-out / backend-error
+
+---
+
+## 🧪 Demo Flow
+
+1. User registers in the system
+2. User logs in
+3. Admin creates an event
+4. User registers for the event
+5. Event image is stored in S3
+6. Notification is sent via SNS
+7. Logs are stored in DynamoDB and CloudWatch
+
+---
+
+## 📸 Suggested Report Screenshots
+
+* Home page UI
+* Create event page
+* S3 bucket showing uploaded images
+* DynamoDB table with logs
+* SNS topic and subscription
+* CloudWatch logs
+* EC2 instance running
+
+---
+
+## 🎯 Conclusion
+
+This project demonstrates how multiple AWS cloud services can be integrated to build a scalable, secure, and cloud-native event management system. It combines compute, storage, database, monitoring, and messaging services into one complete solution.
 
 ---
 
 ## 👨‍💻 Author
 
-Narendra
+Narendra Reddy
