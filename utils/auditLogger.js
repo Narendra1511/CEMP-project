@@ -1,12 +1,7 @@
 const { PutCommand } = require("@aws-sdk/lib-dynamodb");
-const dynamoDb = require("../config/dynamodb");
+const dynamoDb = require("../backend/config/dynamodb");
 
-const logAuditEvent = async ({
-  action,
-  user_id,
-  event_id = null,
-  message,
-}) => {
+const logAuditEvent = async ({ action, user_id, event_id = null, message }) => {
   try {
     const params = {
       TableName: process.env.AWS_DYNAMODB_TABLE,
@@ -21,8 +16,9 @@ const logAuditEvent = async ({
     };
 
     await dynamoDb.send(new PutCommand(params));
+    console.log("DynamoDB audit log saved");
   } catch (error) {
-    console.error("DynamoDB audit log error:", error.message);
+    console.error("DynamoDB error:", error.message);
   }
 };
 

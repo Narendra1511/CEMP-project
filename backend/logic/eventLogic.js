@@ -2,6 +2,7 @@ const { PutObjectCommand } = require("@aws-sdk/client-s3");
 const { pool } = require("../database/db");
 const s3 = require("../config/s3");
 const { validateEvent } = require("../../utils");
+const logAuditEvent = require("../../utils/auditLogger");
 
 // CREATE EVENT
 const createEvent = async (req, res) => {
@@ -15,7 +16,6 @@ const createEvent = async (req, res) => {
 
     let image_url = null;
 
-    // Upload image to S3 if exists
     if (req.file) {
       const fileName = `${Date.now()}-${req.file.originalname}`;
 
@@ -37,6 +37,13 @@ const createEvent = async (req, res) => {
        RETURNING *`,
       [title, description, event_date, location, capacity, image_url, created_by]
     );
+
+    await logAuditEvent({
+      action: "CREATE_EVENT",
+      user_id: created_by,
+      event_id: newEvent.rows[0].id,
+      message: `Event "${title}" created successfully`,
+    });
 
     res.status(201).json({
       message: "Event created successfully",

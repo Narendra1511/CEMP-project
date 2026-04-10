@@ -1,5 +1,5 @@
 const { PublishCommand } = require("@aws-sdk/client-sns");
-const sns = require("../config/sns");
+const sns = require("../backend/config/sns");
 
 const sendNotification = async (message) => {
   try {
@@ -10,6 +10,7 @@ const sendNotification = async (message) => {
     };
 
     await sns.send(new PublishCommand(params));
+    console.log("SNS notification sent");
   } catch (error) {
     console.error("SNS Error:", error.message);
   }
