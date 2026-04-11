@@ -5,6 +5,8 @@ const registerForEvent = async (req, res) => {
   try {
     const { user_id, event_id } = req.body;
 
+    console.log("REGISTER API HIT:", { user_id, event_id });
+
     if (!user_id || !event_id) {
       return res.status(400).json({ message: "User ID and Event ID are required" });
     }
@@ -25,7 +27,8 @@ const registerForEvent = async (req, res) => {
       [user_id, event_id]
     );
 
-    await sendNotification(`User ${user_id} registered for event ${event_id}`);
+    console.log("REGISTER SNS ABOUT TO SEND");
+    await sendNotification(`REGISTERED: User ${user_id} registered for event ${event_id}`);
 
     res.status(201).json({
       message: "Registration successful",
@@ -41,6 +44,8 @@ const cancelRegistration = async (req, res) => {
   try {
     const { user_id, event_id } = req.body;
 
+    console.log("CANCEL API HIT:", { user_id, event_id });
+
     if (!user_id || !event_id) {
       return res.status(400).json({ message: "User ID and Event ID are required" });
     }
@@ -54,7 +59,8 @@ const cancelRegistration = async (req, res) => {
       return res.status(404).json({ message: "Registration not found" });
     }
 
-    await sendNotification(`User ${user_id} cancelled registration for event ${event_id}`);
+    console.log("CANCEL SNS ABOUT TO SEND");
+    await sendNotification(`CANCELLED: User ${user_id} cancelled registration for event ${event_id}`);
 
     res.status(200).json({ message: "Registration cancelled successfully" });
   } catch (error) {
