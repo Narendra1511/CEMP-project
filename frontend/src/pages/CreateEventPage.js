@@ -1,195 +1,140 @@
-import { useState } from "react";
-import api from "../services/api";
+const { PutObjectCommand } = require("@aws-sdk/client-s3");
+const { pool } = require("../database/db");
+const s3 = require("../config/s3");
+const { validateEvent } = require("../../utils");
+const logAuditEvent = require("../../utils/auditLogger");
 
-function CreateEventPage() {
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    event_date: "",
-    location: "",
-    capacity: "",
-  });
+// CREATE EVENT
+const createEvent = async (req, res) => {
+  try {
+    const { title, description, event_date, location, capacity } = req.body;
+    const created_by = req.user.id;
 
-  const [image, setImage] = useState(null);
-
-  const handleChange = (event) => {
-    setFormData({
-      ...formData,
-      [event.target.name]: event.target.value,
-    });
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    try {
-      const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user"));
-
-      if (!token || !user) {
-        alert("Please login first");
-        return;
-      }
-
-      if (user.role !== "admin") {
-        alert("Only admin can create events");
-        return;
-      }
-
-      const submitData = new FormData();
-      submitData.append("title", formData.title);
-      submitData.append("description", formData.description);
-      submitData.append("event_date", formData.event_date);
-      submitData.append("location", formData.location);
-      submitData.append("capacity", formData.capacity);
-
-      if (image) {
-        submitData.append("image", image);
-      }
-
-      const response = await api.post("/events", submitData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      alert(response.data.message);
-
-      setFormData({
-        title: "",
-        description: "",
-        event_date: "",
-        location: "",
-        capacity: "",
-      });
-      setImage(null);
-    } catch (error) {
-      alert(error.response?.data?.message || "Event creation failed");
-      console.error("Create event error:", error);
+    if (!validateEvent({ title, description, date: event_date })) {
+      return res.status(400).json({ message: "Invalid event data" });
     }
-  };
 
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "linear-gradient(135deg, #43cea2, #185a9d)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        padding: "30px",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "550px",
-          background: "rgba(255,255,255,0.15)",
-          backdropFilter: "blur(12px)",
-          borderRadius: "20px",
-          padding: "35px",
-          boxShadow: "0 8px 25px rgba(0,0,0,0.25)",
-          color: "white",
-        }}
-      >
-        <h2
-          style={{
-            textAlign: "center",
-            marginBottom: "25px",
-            fontSize: "2rem",
-          }}
-        >
-          Create New Event
-        </h2>
+    let image_url = null;
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="title"
-            placeholder="Event Title"
-            value={formData.title}
-            onChange={handleChange}
-            style={inputStyle}
-            required
-          />
+    if (req.file) {
+      const fileName = `${Date.now()}-${req.file.originalname}`;
 
-          <textarea
-            name="description"
-            placeholder="Event Description"
-            value={formData.description}
-            onChange={handleChange}
-            style={{ ...inputStyle, minHeight: "100px", resize: "none" }}
-            required
-          />
+      const command = new PutObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: fileName,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      });
 
-          <input
-            type="date"
-            name="event_date"
-            value={formData.event_date}
-            onChange={handleChange}
-            style={inputStyle}
-            required
-          />
+      await s3.send(command);
 
-          <input
-            type="text"
-            name="location"
-            placeholder="Location"
-            value={formData.location}
-            onChange={handleChange}
-            style={inputStyle}
-            required
-          />
+      image_url = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    }
 
-          <input
-            type="number"
-            name="capacity"
-            placeholder="Capacity"
-            value={formData.capacity}
-            onChange={handleChange}
-            style={inputStyle}
-            required
-          />
+    const newEvent = await pool.query(
+      `INSERT INTO events (title, description, event_date, location, capacity, image_url, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [title, description, event_date, location, capacity, image_url, created_by]
+    );
 
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImage(e.target.files[0])}
-            style={inputStyle}
-          />
+    await logAuditEvent({
+      action: "CREATE_EVENT",
+      user_id: created_by,
+      event_id: newEvent.rows[0].id,
+      message: `Event "${title}" created successfully`,
+    });
 
-          <button type="submit" style={buttonStyle}>
-            Create Event
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-const inputStyle = {
-  width: "100%",
-  padding: "12px 15px",
-  marginBottom: "15px",
-  border: "none",
-  borderRadius: "10px",
-  outline: "none",
-  fontSize: "1rem",
-  boxSizing: "border-box",
+    res.status(201).json({
+      message: "Event created successfully",
+      event: newEvent.rows[0],
+    });
+  } catch (error) {
+    console.error("Create event error:", error);
+    res.status(500).json({ message: error.message });
+  }
 };
 
-const buttonStyle = {
-  width: "100%",
-  padding: "14px",
-  border: "none",
-  borderRadius: "10px",
-  backgroundColor: "#ffd166",
-  color: "#222",
-  fontWeight: "bold",
-  fontSize: "1rem",
-  cursor: "pointer",
-  marginTop: "10px",
+// GET ALL EVENTS + REGISTRATION COUNT
+const getAllEvents = async (req, res) => {
+  try {
+    const events = await pool.query(
+      `SELECT
+        events.*,
+        COUNT(registrations.id) AS registration_count
+       FROM events
+       LEFT JOIN registrations ON events.id = registrations.event_id
+       GROUP BY events.id
+       ORDER BY events.created_at DESC`
+    );
+
+    res.status(200).json(events.rows);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-export default CreateEventPage;
+// UPDATE EVENT
+const updateEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, event_date, location, capacity, image_url } = req.body;
+
+    if (!title || !description || !event_date || !location || !capacity) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    const updatedEvent = await pool.query(
+      `UPDATE events
+       SET title = $1,
+           description = $2,
+           event_date = $3,
+           location = $4,
+           capacity = $5,
+           image_url = $6
+       WHERE id = $7
+       RETURNING *`,
+      [title, description, event_date, location, capacity, image_url || null, id]
+    );
+
+    if (updatedEvent.rows.length === 0) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    res.status(200).json({
+      message: "Event updated successfully",
+      event: updatedEvent.rows[0],
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// DELETE EVENT
+const deleteEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedEvent = await pool.query(
+      "DELETE FROM events WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (deletedEvent.rows.length === 0) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    res.status(200).json({
+      message: "Event deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  createEvent,
+  getAllEvents,
+  updateEvent,
+  deleteEvent,
+};
